@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Requests\EquationRequest;
+use App\Models\Equation;
 use App\Models\User;
 use App\Service\EquationManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,12 +12,17 @@ use Tests\TestCase;
 
 class EquationManagerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithFaker;
 
     /**
      * @var EquationManager
      */
     protected $manager;
+
+    /**
+     * @var User
+    */
+    protected $user;
 
     /**
      * Setup the test environment.
@@ -29,17 +36,67 @@ class EquationManagerTest extends TestCase
         $this->seed();
 
         $this->manager = new EquationManager();
-        $user = User::first();
-        $this->actingAs( $user );
+        $this->user = User::first();
+        $this->actingAs( $this->user );
     }
 
     /**
+     * @test
      * A basic feature test example.
      *
      * @return void
      */
-    public function test_example()
+    public function manager_reads_and_receives_proper_response()
     {
-        dd( $this->manager->readItems() );
+        $items = $this->manager->readItems();
+
+        $this->assertCount( 2, $items );
+        $items->each( function( $item ){
+            // items received are properly scoped
+
+            $this->assertEquals( $this->user->id, $item->user_id );
+        });
+    }
+
+    /**
+     * @test
+     * Will make sure that adding a new equation will properly work
+     * 
+     * // TODO extend this to protect against users having multiple equations with the same variable
+     */
+    public function manager_add_test()
+    {
+        $expression = $this->faker->randomNumber . ' + ' . $this->faker->randomNumber;
+        $request = new EquationRequest([
+
+            'variable'   => 'c',
+            'expression' => $expression
+        ]);
+
+        $this->manager->addItem( $request );
+
+        $this->assertDatabaseCount( 'equations', 3 );
+        $this->assertDatabaseHas( 'equations', [
+
+            'variable'   => $request->variable,
+            'expression' => $request->expression,
+            'user_id'    => auth()->user()->id
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function manager_update_test()
+    {
+
+    }
+
+    /**
+     * @test
+     */
+    public function manager_delete_test()
+    {
+
     }
 }

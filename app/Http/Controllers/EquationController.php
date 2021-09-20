@@ -25,9 +25,9 @@ class EquationController extends Controller
      * @param  App\Http\Requests\EquationRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(EquationRequest $request)
+    public function store( EquationManager $mgr, EquationRequest $request )
     {
-        if( $newEquation = Equation::create( array_merge( $request->validated(), [ 'user_id' => auth()->user()->id ] ) ) ) return response()->json([ 'newEquation' => $newEquation ]);
+        if( $newEquation = $mgr->addItem( $request ) ) return response()->json([ 'newEquation' => $newEquation ]);
 
         return response()->json([ 'newEquation' => null ]);
     }
@@ -39,7 +39,7 @@ class EquationController extends Controller
      * @param  \App\Models\Equation  $equation
      * @return \Illuminate\Http\Response
      */
-    public function update(EquationRequest $request, Equation $equation)
+    public function update( EquationManager $mgr, EquationRequest $request, Equation $equation )
     {
         if( $equation->update( array_merge( $request->validated() ) ) ) return response()->json([ 'updatedEquation' => $equation->fresh() ]);
 
@@ -52,7 +52,7 @@ class EquationController extends Controller
      * @param  \App\Models\Equation  $equation
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Equation $equation)
+    public function destroy( EquationManager $mgr, Equation $equation )
     {
         return response()->json([ 'success' => $equation->delete() ]);
     }
