@@ -10,12 +10,13 @@ This is a Laravel 8 project with Vue 3 and Laravel's front-end scaffolding packa
 
 I myself use Homestead for my local setup, but all have their pros/cons.
 
-First, close the repo and change the .env database connection details to match a local database connection of your own. Then, make sure all npm and composer packages are installed.
-One you are ready, run "php artisan migrate:fresh --seed" to seed the databse with a test user.
+First, clone the repo and change the .env database connection details to match a local database connection of your own.
+Then, make sure all npm and composer packages are installed by running their respective "install" commands.
+Once that is all done, run "php artisan migrate:fresh --seed" to seed the database with a test user and two test equations.
 
-The Test User credentials are:
-email: testme@aol.com
-password: password
+## Test User Credentials
+- email: testme@aol.com
+- password: password
 
 ## Interacting With The Parser
 
@@ -27,3 +28,7 @@ Created based upon the following rules:
 
 You simply add an equation in the input on the bottom of the equations list. Once you press enter, or click the save-button, you will have added a new equation to the database.
 Afterwards, you can edit and/or delete the equation by using the commands on screen.
+
+You will notice that there is real-time updating when you are editing an existing expression, that is due to the nature of vue and vuex's reactivity - and also the fact that the
+processing for the functions is being done client-side in vue as opposed to server-side in laravel. This is on purpose because I feel as if the business logic for calculating
+the expression's values is more appropriately placed client-side, using the server for simple persistence and user-authentication.
