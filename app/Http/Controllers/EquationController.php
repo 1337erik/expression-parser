@@ -11,6 +11,7 @@ class EquationController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param EquationManager $mgr the service class responsible for providing the logic for this method
      * @return \Illuminate\Http\Response
      */
     public function index( EquationManager $mgr )
@@ -21,7 +22,7 @@ class EquationController extends Controller
     /**
      * Store a newly created resource in storage.
      * 
-     *
+     * @param EquationManager $mgr the service class responsible for providing the logic for this method
      * @param  App\Http\Requests\EquationRequest  $request
      * @return \Illuminate\Http\Response
      */
@@ -35,13 +36,14 @@ class EquationController extends Controller
     /**
      * Update the specified resource in storage.
      *
+     * @param EquationManager $mgr the service class responsible for providing the logic for this method
      * @param  App\Http\Requests\EquationRequest  $request
      * @param  \App\Models\Equation  $equation
      * @return \Illuminate\Http\Response
      */
     public function update( EquationManager $mgr, EquationRequest $request, Equation $equation )
     {
-        if( $equation->update( array_merge( $request->validated() ) ) ) return response()->json([ 'updatedEquation' => $equation->fresh() ]);
+        if( $mgr->updateItem( $request, $equation ) ) return response()->json([ 'updatedEquation' => $equation->fresh() ]);
 
         return response()->json([ 'updatedEquation' => null ]);
     }
@@ -49,11 +51,12 @@ class EquationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
+     * @param EquationManager $mgr the service class responsible for providing the logic for this method
      * @param  \App\Models\Equation  $equation
      * @return \Illuminate\Http\Response
      */
     public function destroy( EquationManager $mgr, Equation $equation )
     {
-        return response()->json([ 'success' => $equation->delete() ]);
+        return response()->json([ 'success' => $mgr->deleteItem( $equation ) ]);
     }
 }

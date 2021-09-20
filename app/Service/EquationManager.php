@@ -32,18 +32,23 @@ class EquationManager
     }
 
     /**
-     * Grabs equations, automatically scoping to those owned by the auth-user
+     * Responsible for passing in data for updating of equations, no extra processing involved
+     * 
+     * @param EquationRequest $request the data relevant to updating the equation object
+     * @param Equation $eq the object in quewstion being updated
     */
-    public function updateItem()
+    public function updateItem( EquationRequest $request, Equation $eq )
     {
-        return Equation::where( 'user_id', auth()->user()->id )->get();
+        return $eq->update( $request->all() );
     }
 
     /**
-     * Grabs equations, automatically scoping to those owned by the auth-user
+     * Responsible for simply deleting equations, no extra checks or processing involved
+     * 
+     * @param Equation $eq the object being deleted
     */
-    public function deleteItem()
+    public function deleteItem( Equation $eq )
     {
-        return Equation::where( 'user_id', auth()->user()->id )->get();
+        return $eq->delete();
     }
 }

@@ -89,7 +89,36 @@ class EquationManagerTest extends TestCase
      */
     public function manager_update_test()
     {
+        $expression = $this->faker->randomNumber . ' + ' . $this->faker->randomNumber;
+        $request = new EquationRequest([
 
+            'variable'   => 'd',
+            'expression' => $expression
+        ]);
+
+        $existingEquation = Equation::find( 1 );
+        $old_variable     = $existingEquation->variable;
+        $old_expression   = $existingEquation->expression;
+ 
+        $this->manager->updateItem( $request, $existingEquation );
+
+        // make sure the new data exists in the database
+        $this->assertDatabaseHas( 'equations', [
+
+            'id'         => $existingEquation->id,
+            'variable'   => $request->variable,
+            'expression' => $request->expression,
+            'user_id'    => auth()->user()->id
+        ]);
+
+        // make sure the old data does not exist anymore
+        $this->assertDatabaseMissing( 'equations', [
+
+            'id'         => $existingEquation->id,
+            'variable'   => $old_variable,
+            'expression' => $old_expression,
+            'user_id'    => auth()->user()->id
+        ]);
     }
 
     /**
@@ -97,6 +126,12 @@ class EquationManagerTest extends TestCase
      */
     public function manager_delete_test()
     {
+        $target = Equation::first();
+        $this->manager->deleteItem( $target );
 
+        // make sure the database is actually missing this recently-deleted object
+        $this->assertDatabaseMissing( 'equations', $target->toArray() );
+
+        $this->assertDatabaseCount( 'equations', 1 );
     }
 }
