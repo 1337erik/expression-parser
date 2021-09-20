@@ -20654,7 +20654,10 @@ __webpack_require__.r(__webpack_exports__);
   components: {
     Equation: _Equation_vue__WEBPACK_IMPORTED_MODULE_1__["default"]
   },
-  mixins: [_Mixins_EquationManager__WEBPACK_IMPORTED_MODULE_0__["default"]]
+  mixins: [_Mixins_EquationManager__WEBPACK_IMPORTED_MODULE_0__["default"]],
+  mounted: function mounted() {
+    this.getEquations();
+  }
 });
 
 /***/ }),
@@ -27453,6 +27456,14 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 
+/**
+ * This class has the most room for refactoring, as I can expand this by making each Token a node within a linked-list
+ *  which will allow Tokens to apply a generic rule-set for conditions and grammars to determine whether or not they are indeed valid without having
+ *  validity to purely be derived from the parent classes or a brittle "type-check"
+ * 
+ * This improvement will also lead to more intelligent UI that can detect problems with each individual Token and display them to the end-user,
+ *  also assisting in making the expression-calculation simpler
+ */
 
 var TokenModel = /*#__PURE__*/function () {
   // not in use
@@ -27505,6 +27516,7 @@ var TokenModel = /*#__PURE__*/function () {
 
       var externalEquations = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
+      // TODO establish tokens as linked list, establish ruleset for validity and algorithm for checking
       if (this.type == TokenModel.TYPE_VARIABLE) {
         var index = externalEquations.findIndex(function (eq) {
           return eq.variable == _this2.rawValue && eq.id != _this2.parentEquation.id;
@@ -27561,11 +27573,21 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+/**
+ * This mixin handle business logic and is the bridge between the persistence layer ( in vuex ) and the backend-api.
+ *  Mixins are essentially vue's service layer class and provide extra benefits like access to vue's reactivity via vuex getters and computed properties
+ * 
+ * Relatively thin and simple, and the generic CRUD functionalities can stand to be abstracted out to another mixin so that
+ *  the functionality doesnt have to be repeated for every model
+ */
+
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   data: function data() {
     return {
       baseUrl: 'equation',
-      newEquation: new _Classes_EquationModel__WEBPACK_IMPORTED_MODULE_1__["default"]()
+      // the base url for the model/controller
+      newEquation: new _Classes_EquationModel__WEBPACK_IMPORTED_MODULE_1__["default"]() // for any component looking to add a new equation
+
     };
   },
   computed: _objectSpread(_objectSpread({}, (0,vuex__WEBPACK_IMPORTED_MODULE_2__.mapGetters)({
@@ -27575,13 +27597,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   })), {}, {
     isEmpty: function isEmpty() {
       return this.newEquation.expression.trim() == '';
-    }
+    } // simple validation for a component's form input
+
   }),
   methods: _objectSpread({
     getEquations: function getEquations() {
       var _this = this;
 
       axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.baseUrl).then(function (res) {
+        // initialize the stack of items 
         _this.setEquations(res.data.equations);
       })["catch"](function (err) {
         console.error('fetch ERROR', err);
@@ -27596,6 +27620,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         expression: this.newEquation.expression
       }).then(function (res) {
         if (res.data && res.data.newEquation && res.data.newEquation.id) {
+          // if the response is valid, add the returned itemt to the vuex store
           _this2.addItem(res.data.newEquation);
 
           _this2.newEquation = new _Classes_EquationModel__WEBPACK_IMPORTED_MODULE_1__["default"]();
@@ -27609,6 +27634,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
       axios__WEBPACK_IMPORTED_MODULE_0___default()["delete"]("".concat(this.baseUrl, "/").concat(equation.id)).then(function (res) {
         if (res.data && res.data.success) {
+          // if the response is valid, delete the item in the vuex store
           _this3.deleteItem(equation);
         }
       })["catch"](function (err) {
@@ -27623,6 +27649,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         expression: equation.expression
       }).then(function (res) {
         if (res.data && res.data.updatedEquation && res.data.updatedEquation.id) {
+          // if the response is valid, update the item in the vuex store
           _this4.updateItem(equation);
         }
       })["catch"](function (err) {
@@ -27634,10 +27661,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     addItem: 'solver/addItem',
     deleteItem: 'solver/deleteItem',
     updateItem: 'solver/updateItem'
-  })),
-  mounted: function mounted() {
-    this.getEquations();
-  }
+  }))
 });
 
 /***/ }),
@@ -27685,6 +27709,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+/**
+ * The vuex store for persisting and running computations on the equations list
+ * 
+ * The getters are the real meat of this, as they are able to dynamically compute the values of
+ *  equations with respect to the larger list of equations, while providing real-time updates for the UI
+ *  because of the nature of vue's reactivity
+ */
+
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   namespaced: true,
   state: {
@@ -27693,6 +27725,7 @@ __webpack_require__.r(__webpack_exports__);
     tokenModel: new _Classes_TokenModel__WEBPACK_IMPORTED_MODULE_1__["default"]()
   },
   mutations: {
+    // basic CRUD functions
     addItem: function addItem(state, item) {
       return state.equations.push(item);
     },
@@ -27707,9 +27740,11 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   actions: {
+    // basic CRUD
     addItem: function addItem(ctx, item) {
       if (item.expression == '') return;
-      item.variable = item.variable || ctx.rootGetters['solver/nextVariable'];
+      item.variable = item.variable || ctx.rootGetters['solver/nextVariable']; // make sure the variable name is always correct and auto-incrementing
+
       ctx.commit('addItem', new _Classes_EquationModel__WEBPACK_IMPORTED_MODULE_0__["default"](item));
     },
     setEquations: function setEquations(ctx, equations) {
@@ -27748,7 +27783,7 @@ __webpack_require__.r(__webpack_exports__);
 
       return str;
     },
-    // Equation Methods
+    // Equation Getters
     equationStatusClasses: function equationStatusClasses(state) {
       return function (equation) {
         return equation.isValid(state.equations) ? 'text-green-500 font-bold' : 'font-light text-red-500';
@@ -27774,9 +27809,10 @@ __webpack_require__.r(__webpack_exports__);
         return total += eq.trueValue(state.equations);
       }, 0.00);
     },
-    // Token Methods
+    // Token Getters
     tokenStatusClasses: function tokenStatusClasses(state) {
       return function (token) {
+        // TODO expand upon this "isValid" method
         if (!token.isValid(state.equations)) return 'text-xs text-red-500';
 
         switch (token.type) {

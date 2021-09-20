@@ -2,15 +2,21 @@ import axios from "axios";
 import { mapActions, mapGetters } from "vuex";
 import EquationModel from "../Classes/EquationModel";
 
+/**
+ * This mixin handle business logic and is the bridge between the persistence layer ( in vuex ) and the backend-api.
+ *  Mixins are essentially vue's service layer class and provide extra benefits like access to vue's reactivity via vuex getters and computed properties
+ * 
+ * Relatively thin and simple, and the generic CRUD functionalities can stand to be abstracted out to another mixin so that
+ *  the functionality doesnt have to be repeated for every model
+ */
 export default {
 
     data(){
 
         return {
 
-            baseUrl : 'equation',
-
-            newEquation  : new EquationModel()
+            baseUrl     : 'equation', // the base url for the model/controller
+            newEquation : new EquationModel() // for any component looking to add a new equation
         }
     },
     computed: {
@@ -21,7 +27,7 @@ export default {
             nextVariable : 'solver/nextVariable',
             runningTotal : 'solver/runningTotal'
         }),
-        isEmpty(){ return this.newEquation.expression.trim() == ''; }
+        isEmpty(){ return this.newEquation.expression.trim() == ''; } // simple validation for a component's form input
     },
     methods: {
 
@@ -29,6 +35,7 @@ export default {
 
             axios.get( this.baseUrl )
                 .then( res => {
+                    // initialize the stack of items 
 
                     this.setEquations( res.data.equations );
                 })
@@ -45,6 +52,7 @@ export default {
                 .then( res => {
 
                     if( res.data && res.data.newEquation && res.data.newEquation.id ){
+                        // if the response is valid, add the returned itemt to the vuex store
 
                         this.addItem( res.data.newEquation );
                         this.newEquation = new EquationModel();
@@ -61,6 +69,7 @@ export default {
                 .then( res => {
 
                     if( res.data && res.data.success ){
+                        // if the response is valid, delete the item in the vuex store
 
                         this.deleteItem( equation );
                     }
@@ -76,6 +85,7 @@ export default {
                 .then( res => {
 
                     if( res.data && res.data.updatedEquation && res.data.updatedEquation.id ){
+                        // if the response is valid, update the item in the vuex store
 
                         this.updateItem( equation );
                     }

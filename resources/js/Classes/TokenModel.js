@@ -1,5 +1,13 @@
 import EquationModel from "./EquationModel";
 
+/**
+ * This class has the most room for refactoring, as I can expand this by making each Token a node within a linked-list
+ *  which will allow Tokens to apply a generic rule-set for conditions and grammars to determine whether or not they are indeed valid without having
+ *  validity to purely be derived from the parent classes or a brittle "type-check"
+ * 
+ * This improvement will also lead to more intelligent UI that can detect problems with each individual Token and display them to the end-user,
+ *  also assisting in making the expression-calculation simpler
+ */
 export default class TokenModel {
 
     static topTierOperators    = [ '(', ')' ]; // not in use
@@ -46,7 +54,9 @@ export default class TokenModel {
         }
     }
 
+
     isValid( externalEquations = [] ){
+        // TODO establish tokens as linked list, establish ruleset for validity and algorithm for checking
 
         if( this.type == TokenModel.TYPE_VARIABLE ){
 
