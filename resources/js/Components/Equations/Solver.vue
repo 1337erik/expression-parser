@@ -29,7 +29,11 @@
     export default {
 
         components: { Equation },
-        mixins: [ EquationManager ]
+        mixins: [ EquationManager ],
+        mounted(){
+
+            this.getEquations();
+        }
     }
 </script>
 

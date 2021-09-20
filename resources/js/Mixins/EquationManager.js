@@ -92,9 +92,5 @@ export default {
             deleteItem   : 'solver/deleteItem',
             updateItem   : 'solver/updateItem'
         })
-    },
-    mounted(){
-
-        this.getEquations();
     }
 }
