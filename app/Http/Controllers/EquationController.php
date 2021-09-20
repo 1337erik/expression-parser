@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EquationRequest;
 use App\Models\Equation;
+use App\Service\EquationManager;
 
 class EquationController extends Controller
 {
@@ -12,9 +13,9 @@ class EquationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index( EquationManager $mgr )
     {
-        return response()->json([ 'equations' => Equation::where( 'user_id', auth()->user()->id )->get() ]);
+        return response()->json([ 'equations' => $mgr->readItems() ]);
     }
 
     /**
